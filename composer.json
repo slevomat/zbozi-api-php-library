@@ -1,0 +1,25 @@
+{
+	"name": "slevomat/zboziapilibrary",
+	"description": "Slevomat Zboží API PHP library",
+	"authors": [
+		{
+			"name": "Slevomat.cz, s.r.o.",
+			"homepage": "http://www.slevomat.cz"
+		}
+	],
+	"require": {
+		"phing/phing": "~2.11",
+		"php": ">=5.4.0",
+		"guzzlehttp/guzzle": "~5.3"
+	},
+	"require-dev": {
+		"consistence/coding-standard": "~0.6",
+		"phpunit/phpunit": "~4.8",
+		"jakub-onderka/php-parallel-lint": "~0.9"
+	},
+	"autoload": {
+		"psr-4": {
+			"SlevomatZboziApi\\": "src/"
+		}
+	}
+}
