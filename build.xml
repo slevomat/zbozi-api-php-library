@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="SlevomatZboziApiLibrary" default="build">
+
+	<property name="path.build" value="${project.basedir}/build"/>
+	<property name="path.build.properties" value="${path.build}/build.properties"/>
+
+	<property file="${path.build.properties}"/>
+
+	<target name="build" depends="
+		composer,
+		phplint,
+		tests
+		"/>
+
+	<target name="composer">
+		<exec
+			executable="${path.composer.executable}"
+			logoutput="true"
+			passthru="true"
+			checkreturn="true"
+		>
+			<arg value="install"/>
+		</exec>
+	</target>
+
+	<target name="phplint">
+		<exec
+			executable="${path.phplint.executable}"
+			logoutput="true"
+			passthru="true"
+			checkreturn="true"
+		>
+			<arg path="${path.src}"/>
+			<arg path="${path.tests}"/>
+		</exec>
+	</target>
+
+	<target name="tests">
+		<exec
+			executable="${path.phpunit.executable}"
+			logoutput="true"
+			passthru="true"
+			checkreturn="true"
+		>
+			<arg value="--configuration"/>
+			<arg value="${path.phpunit.configuration}"/>
+			<arg path="${path.tests}"/>
+		</exec>
+	</target>
+
+</project>
