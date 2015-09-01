@@ -9,3 +9,5 @@ before_script:
 script:
   - composer install
   - vendor/bin/phing
+after_script:
+  - php vendor/bin/coveralls -v
