@@ -1,6 +1,8 @@
 Slevomat Zboží API PHP Library
 ======================
 
+[![Build Status](https://travis-ci.org/slevomat/zbozi-api-php-library.svg)](https://travis-ci.org/slevomat/zbozi-api-php-library)
+
 [Dokumentace Zboží API](http://docs.slevomatzbozi.apiary.io/)
 
 Tato knihovna slouží pro implementaci komunikace Partner -> Slevomat.
