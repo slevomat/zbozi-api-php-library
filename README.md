@@ -3,6 +3,7 @@ Slevomat Zboží API PHP Library
 
 [![Build Status](https://travis-ci.org/slevomat/zbozi-api-php-library.svg)](https://travis-ci.org/slevomat/zbozi-api-php-library)
 [![Latest Stable Version](https://poser.pugx.org/slevomat/zbozi-api-library/v/stable)](https://packagist.org/packages/slevomat/zbozi-api-library)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/?branch=master)
 
 [Dokumentace Zboží API](http://docs.slevomatzbozi.apiary.io/)
 
