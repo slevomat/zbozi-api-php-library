@@ -7,7 +7,7 @@ use SlevomatZboziApi\Request\InvalidRequestType;
 class ResponseValidatorTest extends \PHPUnit_Framework_TestCase
 {
 
-	/** @var \SlevomatZboziApi\Response\ResponseValidator|\PHPUnit_Framework_MockObject_MockBuilder */
+	/** @var \SlevomatZboziApi\Response\ResponseValidator */
 	private $responseValidator;
 
 	public function setup()
