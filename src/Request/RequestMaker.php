@@ -12,7 +12,7 @@ class RequestMaker
 	const HEADER_PARTNER_TOKEN = 'X-PartnerToken';
 	const HEADER_API_SECRET = 'X-ApiSecret';
 
-	/** @var \GuzzleHttp\Client */
+	/** @var \GuzzleHttp\ClientInterface */
 	private $client;
 
 	/** @var string */
