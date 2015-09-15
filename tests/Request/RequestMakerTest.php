@@ -5,7 +5,7 @@ namespace SlevomatZboziApi\Request;
 class RequestMakerTest extends \PHPUnit_Framework_TestCase
 {
 
-	/** @var \GuzzleHttp\Client|\PHPUnit_Framework_MockObject_MockBuilder */
+	/** @var \GuzzleHttp\Client|\PHPUnit_Framework_MockObject_MockObject */
 	private $httpClientMock;
 
 	/** @var string */
@@ -14,7 +14,7 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 	/** @var string */
 	private $apiSecret = 'qwrwerwerwerwewer';
 
-	/** @var \SlevomatZboziApi\ZboziApiLogger|\PHPUnit_Framework_MockObject_MockBuilder */
+	/** @var \SlevomatZboziApi\ZboziApiLogger|\PHPUnit_Framework_MockObject_MockObject */
 	private $loggerMock;
 
 	public function setup()
