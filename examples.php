@@ -29,11 +29,11 @@ try {
 	printSuccess(sprintf(' (expectedDeliveryDate: %s)', $expectedDeliveryDate->format('j. n. Y')));
 
 	printTitle('mark-getting-ready-for-pickup');
-	$expectedDeliveryDate = $testClient->markGettingReadyForPickup($orderId);
+	$expectedDeliveryDate = $testClient->markGettingReadyForPickup($orderId, true, true);
 	printSuccess(sprintf(' (expectedDeliveryDate: %s)', $expectedDeliveryDate->format('j. n. Y')));
 
 	printTitle('mark-ready-for-pickup');
-	$testClient->markReadyForPickup($orderId);
+	$testClient->markReadyForPickup($orderId, true);
 	printSuccess();
 
 	printTitle('mark-delivered');

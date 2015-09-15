@@ -86,14 +86,22 @@ class ZboziApiClient
 
 	/**
 	 * @param string $orderId
+	 * @param boolean $autoMarkReadyForPickup
+	 * @param boolean $autoMarkDelivered
 	 * @return \DateTime
 	 */
-	public function markGettingReadyForPickup($orderId)
+	public function markGettingReadyForPickup($orderId, $autoMarkReadyForPickup = false, $autoMarkDelivered = false)
 	{
 		TypeValidator::checkString($orderId);
+		TypeValidator::checkBoolean($autoMarkReadyForPickup);
+		TypeValidator::checkBoolean($autoMarkDelivered);
 
 		$endpoint = $this->getEndpoint($orderId, 'mark-getting-ready-for-pickup');
-		$response = $this->requestMaker->sendPostRequest($endpoint);
+		$body = [
+			'autoMarkDelivered' => $autoMarkDelivered,
+			'autoMarkReadyForPickup' => $autoMarkReadyForPickup,
+		];
+		$response = $this->requestMaker->sendPostRequest($endpoint, $body);
 		$this->responseValidator->validateResponse($response);
 
 		return $this->responseValidator->getExpectedDeliveryDate($response);
@@ -101,13 +109,18 @@ class ZboziApiClient
 
 	/**
 	 * @param string $orderId
+	 * @param boolean $autoMarkDelivered
 	 */
-	public function markReadyForPickup($orderId)
+	public function markReadyForPickup($orderId, $autoMarkDelivered = false)
 	{
 		TypeValidator::checkString($orderId);
+		TypeValidator::checkBoolean($autoMarkDelivered);
 
 		$endpoint = $this->getEndpoint($orderId, 'mark-ready-for-pickup');
-		$response = $this->requestMaker->sendPostRequest($endpoint);
+		$body = [
+			'autoMarkDelivered' => $autoMarkDelivered,
+		];
+		$response = $this->requestMaker->sendPostRequest($endpoint, $body);
 		$this->responseValidator->validateResponse($response);
 	}
 
