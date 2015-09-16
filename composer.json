@@ -1,6 +1,7 @@
 {
 	"name": "slevomat/zbozi-api-library",
 	"description": "Slevomat Zboží API PHP library",
+	"license": "MIT",
 	"authors": [
 		{
 			"name": "Slevomat.cz, s.r.o.",
