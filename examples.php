@@ -48,6 +48,10 @@ try {
 	$testClient->cancelOrder($orderId, $cancelOrderItems, 'Duvod storna');
 	printSuccess();
 
+	printTitle('update-shipping-address');
+	$testClient->updateShippingAddress($orderId, 'Petr Novak', 'Prazska 16', 'Praha 10', 'cz', '+420777888999', '10200');
+	printSuccess();
+
 } catch (\SlevomatZboziApi\Request\ConnectionErrorException $e) {
 	printError(sprintf('%s %s', $e->getMessage(), $e->getPrevious()->getMessage()));
 	//retry request

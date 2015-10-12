@@ -138,6 +138,44 @@ class ZboziApiClient
 
 	/**
 	 * @param string $orderId
+	 * @param string $name
+	 * @param string $street
+	 * @param string $city
+	 * @param string  $state
+	 * @param string $phone
+	 * @param string $postalCode
+	 * @param string|null $company
+	 */
+	public function updateShippingAddress($orderId, $name, $street, $city, $state, $phone, $postalCode, $company = null)
+	{
+		TypeValidator::checkString($orderId);
+		TypeValidator::checkString($name);
+		TypeValidator::checkString($street);
+		TypeValidator::checkString($city);
+		TypeValidator::checkString($state);
+		TypeValidator::checkString($phone);
+		TypeValidator::checkString($postalCode);
+		if ($company !== null) {
+			TypeValidator::checkString($company);
+		}
+
+		$body = [
+			'name' => $name,
+			'street' => $street,
+			'city' => $city,
+			'state' => $state,
+			'phone' => $phone,
+			'postalCode' => $postalCode,
+			'company' => $company,
+		];
+
+		$endpoint = $this->getEndpoint($orderId, 'update-shipping-address');
+		$response = $this->requestMaker->sendPostRequest($endpoint, $body);
+		$this->responseValidator->validateResponse($response);
+	}
+
+	/**
+	 * @param string $orderId
 	 * @param string $action
 	 * @return string
 	 */
