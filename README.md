@@ -5,7 +5,7 @@ Slevomat Zboží API PHP Library
 [![Latest Stable Version](https://poser.pugx.org/slevomat/zbozi-api-library/v/stable)](https://packagist.org/packages/slevomat/zbozi-api-library)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/?branch=master)
 
-[Dokumentace Zboží API](http://docs.slevomatzbozi.apiary.io/)
+[Dokumentace Zboží API](https://www.slevomat.cz/partner/zbozi-api)
 
 Tato knihovna slouží pro implementaci komunikace Partner -> Slevomat.
 
