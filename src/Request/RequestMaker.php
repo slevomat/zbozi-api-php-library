@@ -11,6 +11,7 @@ class RequestMaker
 
 	const HEADER_PARTNER_TOKEN = 'X-PartnerToken';
 	const HEADER_API_SECRET = 'X-ApiSecret';
+	const HEADER_USER_AGENT = 'User-Agent';
 
 	/** @var \GuzzleHttp\ClientInterface */
 	private $client;
@@ -74,6 +75,7 @@ class RequestMaker
 		$request->setHeaders([
 			static::HEADER_PARTNER_TOKEN => $this->partnerToken,
 			static::HEADER_API_SECRET => $this->apiSecret,
+			static::HEADER_USER_AGENT => sprintf('SlevomatZboziApiClient/PHP %s', PHP_VERSION),
 		]);
 
 		if ($body !== null) {
