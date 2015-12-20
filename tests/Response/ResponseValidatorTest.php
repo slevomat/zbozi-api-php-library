@@ -23,7 +23,7 @@ class ResponseValidatorTest extends \PHPUnit_Framework_TestCase
 	{
 		$response = $this->createClientErrorResponse(400, InvalidRequestType::BAD_REQUEST, [
 			'Row 1, missing amount key.',
-			'Row 1, missing slevomatId key.'
+			'Row 1, missing slevomatId key.',
 		]);
 		$this->responseValidator->validateResponse($response);
 	}
@@ -135,7 +135,7 @@ class ResponseValidatorTest extends \PHPUnit_Framework_TestCase
 	public function testGetExpectedDeliveryDateThrowsResponseExceptionForResponsesWithInvalidExpectedDeliveryDateKey()
 	{
 		$response = new ZboziApiResponse(200, [
-			'expectedDeliveryDate' => 'nonsense'
+			'expectedDeliveryDate' => 'nonsense',
 		]);
 		$this->responseValidator->getExpectedDeliveryDate($response);
 	}

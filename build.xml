@@ -9,6 +9,7 @@
 	<target name="build" depends="
 		composer,
 		phplint,
+		phpcs,
 		tests
 		"/>
 
@@ -32,6 +33,39 @@
 		>
 			<arg path="${path.src}"/>
 			<arg path="${path.tests}"/>
+		</exec>
+	</target>
+
+	<target name="phpcs">
+		<exec
+				executable="vendor/bin/phpcs"
+				logoutput="true"
+				passthru="true"
+				checkreturn="true"
+		>
+			<arg value="--standard=ruleset.xml"/>
+			<arg value="--extensions=php"/>
+			<arg value="--encoding=utf-8"/>
+			<arg value="--tab-width=4"/>
+			<arg value="-sp"/>
+			<arg path="src"/>
+			<arg path="tests"/>
+		</exec>
+	</target>
+
+	<target name="phpcs-fix">
+		<exec
+				executable="vendor/bin/phpcbf"
+				logoutput="true"
+				passthru="true"
+				checkreturn="true"
+		>
+			<arg value="--standard=ruleset.xml"/>
+			<arg value="--extensions=php"/>
+			<arg value="--encoding=utf-8"/>
+			<arg value="--tab-width=4"/>
+			<arg path="src"/>
+			<arg path="tests"/>
 		</exec>
 	</target>
 
