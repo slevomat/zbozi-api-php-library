@@ -63,6 +63,17 @@ class RequestMaker
 	{
 		TypeValidator::checkString($url);
 
+		$request = new \GuzzleHttp\Psr7\Request(
+			'POST',
+			$url,
+			[
+				static::HEADER_PARTNER_TOKEN => $this->partnerToken,
+				static::HEADER_API_SECRET => $this->apiSecret,
+				static::HEADER_USER_AGENT => sprintf('SlevomatZboziApiClient/PHP %s', PHP_VERSION),
+			],
+			$body === null ? null : \GuzzleHttp\Psr7\stream_for(json_encode($body))
+		);
+
 		$options = [
 			'allow_redirects' => false,
 			'verify' => true,
@@ -70,21 +81,9 @@ class RequestMaker
 			'expect' => false,
 			'timeout' => $this->timeoutInSeconds,
 		];
-
-		$request = $this->client->createRequest('POST', $url, $options);
-		$request->setHeaders([
-			static::HEADER_PARTNER_TOKEN => $this->partnerToken,
-			static::HEADER_API_SECRET => $this->apiSecret,
-			static::HEADER_USER_AGENT => sprintf('SlevomatZboziApiClient/PHP %s', PHP_VERSION),
-		]);
-
-		if ($body !== null) {
-			$request->setBody(\GuzzleHttp\Stream\Stream::factory(json_encode($body)));
-		}
-
 		try {
 			try {
-				$response = $this->client->send($request);
+				$response = $this->client->send($request, $options);
 				$this->log($request, $response);
 
 				return $this->getZboziApiResponse($response);
@@ -98,35 +97,42 @@ class RequestMaker
 				throw new \SlevomatZboziApi\Request\ConnectionErrorException('Connection to Slevomat API failed.', $e->getCode(), $e);
 			}
 
-		} catch (\GuzzleHttp\Exception\ParseException $e) {
+		} catch (\SlevomatZboziApi\Response\ResponseParsingErrorException $e) {
 			$this->log($request, isset($response) ? $response : null, true);
 			throw new \SlevomatZboziApi\Response\ResponseErrorException('Slevomat API invalid response: invalid JSON data.', $e->getCode(), $e);
 		}
 	}
 
 	/**
-	 * @param \GuzzleHttp\Message\RequestInterface $request
+	 * @param \Psr\Http\Message\RequestInterface $request
 	 * @return \SlevomatZboziApi\Request\ZboziApiRequest
 	 */
-	private function getZboziApiRequest(\GuzzleHttp\Message\RequestInterface $request)
+	private function getZboziApiRequest(\Psr\Http\Message\RequestInterface $request)
 	{
+		$body = (string) $request->getBody();
+
 		return new ZboziApiRequest(
 			$request->getMethod(),
-			$request->getUrl(),
+			(string) $request->getUri(),
 			$request->getHeaders(),
-			$request->getBody() === null ? null : json_decode((string) $request->getBody())
+			$body === '' ? null : json_decode($body, true)
 		);
 	}
 
 	/**
-	 * @param \GuzzleHttp\Message\ResponseInterface $response
+	 * @param \Psr\Http\Message\ResponseInterface $response
 	 * @param boolean $ignoreBody
 	 * @return \SlevomatZboziApi\Response\ZboziApiResponse
 	 */
-	private function getZboziApiResponse(\GuzzleHttp\Message\ResponseInterface $response, $ignoreBody = false)
+	private function getZboziApiResponse(\Psr\Http\Message\ResponseInterface $response, $ignoreBody = false)
 	{
 		if (!$ignoreBody && preg_match('~^[2|4]~', $response->getStatusCode())) {
-			return new ZboziApiResponse($response->getStatusCode(), $response->json());
+			$bodyEncoded = (string) $response->getBody();
+			$body = $bodyEncoded === '' ? null : json_decode($bodyEncoded, true);
+			if (json_last_error() !== JSON_ERROR_NONE) {
+				throw new \SlevomatZboziApi\Response\ResponseParsingErrorException();
+			}
+			return new ZboziApiResponse($response->getStatusCode(), $body);
 
 		} else {
 			return new ZboziApiResponse($response->getStatusCode());
@@ -134,13 +140,13 @@ class RequestMaker
 	}
 
 	/**
-	 * @param \GuzzleHttp\Message\RequestInterface $request
-	 * @param \GuzzleHttp\Message\ResponseInterface|null $response
+	 * @param \Psr\Http\Message\RequestInterface $request
+	 * @param \Psr\Http\Message\ResponseInterface|null $response
 	 * @param boolean $ignoreBody
 	 */
 	private function log(
-		\GuzzleHttp\Message\RequestInterface $request,
-		\GuzzleHttp\Message\ResponseInterface $response = null,
+		\Psr\Http\Message\RequestInterface $request,
+		\Psr\Http\Message\ResponseInterface $response = null,
 		$ignoreBody = false
 	)
 	{

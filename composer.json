@@ -10,7 +10,7 @@
 	],
 	"require": {
 		"php": "^5.6|^7.0",
-		"guzzlehttp/guzzle": "~5.3"
+		"guzzlehttp/guzzle": "^6.0"
 	},
 	"require-dev": {
 		"consistence/coding-standard": "^0.8",

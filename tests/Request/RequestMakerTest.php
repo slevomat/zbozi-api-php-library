@@ -2,6 +2,8 @@
 
 namespace SlevomatZboziApi\Request;
 
+use SlevomatZboziApi\Response\ZboziApiResponse;
+
 class RequestMakerTest extends \PHPUnit_Framework_TestCase
 {
 
@@ -30,47 +32,51 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 
 	public function testSendPostRequestReturnsZboziApiResponse()
 	{
-		$this->loggerMock->expects(self::once())->method('log');
-
 		$requestUrl = 'someUrl';
 		$requestBody = [
 			'autoMarkDelivered' => true,
 		];
-		$headers = [
-			RequestMaker::HEADER_API_SECRET => $this->apiSecret,
-			RequestMaker::HEADER_PARTNER_TOKEN => $this->partnerToken,
-		];
-		$request = new \GuzzleHttp\Message\Request('POST', $requestUrl, $headers);
-
-		$responseData = [
+		$responseBody = [
 			'expectedDeliveryDate' => '2012-01-01',
 		];
-
-		$this->httpClientMock
-			->expects(self::once())
-			->method('createRequest')
-			->with('POST', $requestUrl)
-			->willReturn($request);
+		$response = new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody));
 
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->willReturn($this->createFutureResponse(200, json_encode($responseData)));
+			->with($this->callback(function (\GuzzleHttp\Psr7\Request $request) use ($requestBody) {
+				$body = json_decode((string) $request->getBody(), true);
+				return $request->getMethod() === 'POST' && $request->getUri()->getPath() === 'someUrl' && $body === $requestBody;
+			}))
+			->willReturn($response);
+
+		$this->loggerMock
+			->expects(self::once())
+			->method('log')
+			->with(
+				$this->callback(function (ZboziApiRequest $request) use ($requestBody) {
+					return $request->getMethod() === 'POST' && $request->getUrl() === 'someUrl' && $request->getBody() === $requestBody;
+				}),
+				$this->callback(function (ZboziApiResponse $response) use ($responseBody) {
+					return $response->getStatusCode() === 200 && $response->getBody() === $responseBody;
+				})
+			);
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest($requestUrl, $requestBody);
-
 		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
 		$this->assertSame(200, $response->getStatusCode());
-		$this->assertSame($responseData, $response->getBody());
+		$this->assertSame($responseBody, $response->getBody());
 	}
 
 	public function testSendPostRequestReturnsZboziApiResponseAndIgnoresResponseBodyForResponsesWithStatusCodeStartingAt5()
 	{
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$this->httpClientMock->method('createRequest')->willReturn(new \GuzzleHttp\Message\Request('POST', 'someUrl'));
-		$this->httpClientMock->method('send')->willReturn($this->createFutureResponse(500, '<html>Server error</html>'));
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->willReturn(new \GuzzleHttp\Psr7\Response(500, [], '<html>Server error</html>'));
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest('somerUrl');
@@ -85,8 +91,10 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 		$this->loggerMock->expects(self::once())->method('log');
 
 		$responseBody = '{"status":3,"messages":["OrderId #45445 not found."]}';
-		$this->httpClientMock->method('createRequest')->willReturn(new \GuzzleHttp\Message\Request('POST', 'someUrl'));
-		$this->httpClientMock->method('send')->willReturn($this->createFutureResponse(404, $responseBody));
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->willReturn(new \GuzzleHttp\Psr7\Response(404, [], $responseBody));
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest('somerUrl');
@@ -104,11 +112,11 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$request = new \GuzzleHttp\Message\Request('POST', 'someUrl');
-		$this->httpClientMock->method('createRequest')->willReturn($request);
-		$this->httpClientMock->method('send')->willReturn($this->createFuture(function () use ($request) {
-			throw new \GuzzleHttp\Exception\RequestException('some message', $request);
-		}));
+		$request = new \GuzzleHttp\Psr7\Request('POST', 'someUrl');
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->willThrowException(new \GuzzleHttp\Exception\RequestException('some message', $request));
 
 		$requestMaker = $this->createRequestMaker();
 		$requestMaker->sendPostRequest('somerUrl');
@@ -116,17 +124,17 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 
 	public function testZboziApiResponseIsReturnedWhenRequestExceptionContainsResponse()
 	{
-		$response = new \GuzzleHttp\Message\Response(300);
+		$response = new \GuzzleHttp\Psr7\Response(300);
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$request = new \GuzzleHttp\Message\Request('POST', 'someUrl');
-		$this->httpClientMock->method('createRequest')->willReturn($request);
-		$this->httpClientMock->method('send')->willReturn($this->createFuture(function () use ($request, $response) {
-			throw new \GuzzleHttp\Exception\RequestException('some message', $request, $response);
-		}));
+		$request = new \GuzzleHttp\Psr7\Request('POST', 'someUrl');
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->willThrowException(new \GuzzleHttp\Exception\RequestException('some message', $request, $response));
 
 		$requestMaker = $this->createRequestMaker();
-		$response = $requestMaker->sendPostRequest('somerUrl');
+		$response = $requestMaker->sendPostRequest('someUrl');
 		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
 	}
 
@@ -138,22 +146,29 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$this->httpClientMock->method('createRequest')->willReturn(new \GuzzleHttp\Message\Request('POST', 'someUrl'));
-		$this->httpClientMock->method('send')->willReturn($this->createFutureResponse(200, '{"someData":xxx}'));
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->willReturn(new \GuzzleHttp\Psr7\Response(200, [], '{"someData":xxx}'));
 
 		$requestMaker = $this->createRequestMaker();
-		$requestMaker->sendPostRequest('somerUrl');
+		$requestMaker->sendPostRequest('someUrl');
 	}
 
 	public function testSendPostRequestWorksWithoutLogger()
 	{
 		$this->loggerMock = null;
 
-		$this->httpClientMock->method('createRequest')->willReturn(new \GuzzleHttp\Message\Request('POST', 'someUrl'));
-		$this->httpClientMock->method('send')->willReturn($this->createFutureResponse(200, '{"someData":8}'));
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->with($this->callback(function (\GuzzleHttp\Psr7\Request $subject) {
+				return $subject->getMethod() === 'POST' && $subject->getUri()->getPath() === 'someUrl';
+			}))
+			->willReturn(new \GuzzleHttp\Psr7\Response(200, [], '{"someData":8}'));
 
 		$requestMaker = $this->createRequestMaker();
-		$requestMaker->sendPostRequest('somerUrl');
+		$requestMaker->sendPostRequest('someUrl');
 		$this->assertTrue(true);
 	}
 
@@ -163,42 +178,6 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 	private function createRequestMaker()
 	{
 		return new RequestMaker($this->httpClientMock, $this->partnerToken, $this->apiSecret, 30, $this->loggerMock);
-	}
-
-	/**
-	 * @param callable $wait
-	 * @param callable|null $cancel
-	 * @return \GuzzleHttp\Message\FutureResponse
-	 */
-	private function createFuture(callable $wait, callable $cancel = null)
-	{
-		$deferred = new \React\Promise\Deferred();
-
-		return new \GuzzleHttp\Message\FutureResponse(
-			$deferred->promise(),
-			function () use ($deferred, $wait) {
-				$deferred->resolve($wait());
-			},
-			$cancel
-		);
-	}
-
-	/**
-	 * @param integer $httpStatusCode
-	 * @param string $body
-	 * @return \GuzzleHttp\Message\FutureResponse
-	 */
-	private function createFutureResponse($httpStatusCode, $body)
-	{
-		$response = new \GuzzleHttp\Message\Response(
-			$httpStatusCode,
-			[],
-			\GuzzleHttp\Stream\Stream::factory($body)
-		);
-
-		return $this->createFuture(function () use ($response) {
-			return $response;
-		});
 	}
 
 }
