@@ -1,15 +1,15 @@
 Slevomat Zboží API PHP Library
 ======================
 
-[![Build Status](https://travis-ci.org/slevomat/zbozi-api-php-library.svg)](https://travis-ci.org/slevomat/zbozi-api-php-library)
-[![Latest Stable Version](https://poser.pugx.org/slevomat/zbozi-api-library/v/stable)](https://packagist.org/packages/slevomat/zbozi-api-library)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/slevomat/zbozi-api-php-library/?branch=master)
+[![Build status](https://github.com/slevomat/zbozi-api-php-library/workflows/Build/badge.svg?branch=master)](https://github.com/slevomat/zbozi-api-php-library/actions?query=workflow%3ABuild+branch%3Amaster)
+[![Latest Stable Version](https://img.shields.io/packagist/v/slevomat/zbozi-api-library.svg)](https://packagist.org/packages/slevomat/zbozi-api-library)
+[![Code coverage](https://codecov.io/gh/slevomat/zbozi-api-php-library/branch/master/graph/badge.svg)](https://codecov.io/gh/slevomat/zbozi-api-php-library)
 
 [Dokumentace Zboží API](https://www.slevomat.cz/partner/zbozi-api)
 
 Tato knihovna slouží pro implementaci komunikace Partner -> Slevomat.
 
-Knihovna vyžaduje verzi PHP 5.4 nebo vyšší a předpokládá využití nástroje [Composer](https://getcomposer.org/).
+Knihovna vyžaduje verzi PHP 7.4 nebo vyšší a předpokládá využití nástroje [Composer](https://getcomposer.org/).
 
 Instalace knihovny
 --------------------
