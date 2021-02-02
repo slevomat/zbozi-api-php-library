@@ -1,15 +1,23 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Type;
+
+use function gettype;
+use function is_array;
+use function is_bool;
+use function is_integer;
+use function is_scalar;
+use function is_string;
+use function sprintf;
 
 class TypeValidator
 {
 
 	/**
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public static function checkString($value, $allowNull = false)
+	public static function checkString($value, bool $allowNull = false): void
 	{
 		if (!is_string($value) && (!$allowNull || $value !== null)) {
 			self::throwException('String', $value);
@@ -18,9 +26,9 @@ class TypeValidator
 
 	/**
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public static function checkInteger($value, $allowNull = false)
+	public static function checkInteger($value, bool $allowNull = false): void
 	{
 		if (!is_integer($value) && (!$allowNull || $value !== null)) {
 			self::throwException('Integer', $value);
@@ -29,9 +37,9 @@ class TypeValidator
 
 	/**
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public static function checkBoolean($value, $allowNull = false)
+	public static function checkBoolean($value, bool $allowNull = false): void
 	{
 		if (!is_bool($value) && (!$allowNull || $value !== null)) {
 			self::throwException('Boolean', $value);
@@ -41,9 +49,9 @@ class TypeValidator
 	/**
 	 * @param mixed $value
 	 * @param string|null $className
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public static function checkArray($value, $className = null, $allowNull = false)
+	public static function checkArray($value, ?string $className = null, bool $allowNull = false): void
 	{
 		static::checkString($className, true);
 
@@ -52,14 +60,16 @@ class TypeValidator
 		}
 
 		if (!is_array($value)) {
-			throw new \SlevomatZboziApi\Type\TypeValidationFailedException(sprintf('Array expected, %s given.', gettype($value)));
+			throw new TypeValidationFailedException(sprintf('Array expected, %s given.', gettype($value)));
 		}
 
-		if ($className !== null) {
-			foreach ($value as $item) {
-				if (!$item instanceof $className) {
-					throw new \SlevomatZboziApi\Type\TypeValidationFailedException(sprintf('%s[] expected.', $className));
-				}
+		if ($className === null) {
+			return;
+		}
+
+		foreach ($value as $item) {
+			if (!$item instanceof $className) {
+				throw new TypeValidationFailedException(sprintf('%s[] expected.', $className));
 			}
 		}
 	}
@@ -68,14 +78,13 @@ class TypeValidator
 	 * @param string $type
 	 * @param mixed $value
 	 */
-	private static function throwException($type, $value)
+	private static function throwException(string $type, $value): void
 	{
 		if (is_scalar($value)) {
-			throw new \SlevomatZboziApi\Type\TypeValidationFailedException(sprintf('%s expected, %s (%s) given.', $type, gettype($value), $value));
-
-		} else {
-			throw new \SlevomatZboziApi\Type\TypeValidationFailedException(sprintf('%s expected, %s given.', $type, gettype($value)));
+			throw new TypeValidationFailedException(sprintf('%s expected, %s (%s) given.', $type, gettype($value), $value));
 		}
+
+		throw new TypeValidationFailedException(sprintf('%s expected, %s given.', $type, gettype($value)));
 	}
 
 }

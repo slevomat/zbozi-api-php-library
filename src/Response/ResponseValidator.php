@@ -1,75 +1,75 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Response;
 
+use DateTime;
+use SlevomatZboziApi\Request\BadRequestException;
+use SlevomatZboziApi\Request\InvalidCancelException;
+use SlevomatZboziApi\Request\InvalidCredentialsException;
 use SlevomatZboziApi\Request\InvalidRequestType;
+use SlevomatZboziApi\Request\InvalidStatusChangeException;
+use SlevomatZboziApi\Request\OrderItemNotFoundException;
+use SlevomatZboziApi\Request\OrderNotExportedException;
+use SlevomatZboziApi\Request\OrderNotFoundException;
+use SlevomatZboziApi\Request\OtherRequestErrorException;
+use function preg_match;
+use function sprintf;
 
 class ResponseValidator
 {
 
-	public function validateResponse(ZboziApiResponse $response)
+	public function validateResponse(ZboziApiResponse $response): void
 	{
-		if (preg_match('~^2~', $response->getStatusCode())) {
+		if (preg_match('~^2~', (string) $response->getStatusCode()) === 1) {
 			return;
 		}
 
 		$responseBody = $response->getBody();
 
-		if (preg_match('~^4~', $response->getStatusCode())) {
+		if (preg_match('~^4~', (string) $response->getStatusCode()) === 1) {
 			if (!isset($responseBody['status'])) {
-				throw new \SlevomatZboziApi\Response\ResponseErrorException(sprintf('Slevomat API invalid %s response: missing status.', $response->getStatusCode()));
+				throw new ResponseErrorException(sprintf('Slevomat API invalid %s response: missing status.', $response->getStatusCode()));
 			}
 			if (!isset($responseBody['messages'])) {
-				throw new \SlevomatZboziApi\Response\ResponseErrorException(sprintf('Slevomat API invalid %s response: missing messages.', $response->getStatusCode()));
+				throw new ResponseErrorException(sprintf('Slevomat API invalid %s response: missing messages.', $response->getStatusCode()));
 			}
+
 			switch ($responseBody['status']) {
 				case InvalidRequestType::BAD_REQUEST:
-					throw new \SlevomatZboziApi\Request\BadRequestException($responseBody['messages']);
-
+					throw new BadRequestException($responseBody['messages']);
 				case InvalidRequestType::INVALID_CREDENTIALS:
-					throw new \SlevomatZboziApi\Request\InvalidCredentialsException($responseBody['messages']);
-
+					throw new InvalidCredentialsException($responseBody['messages']);
 				case InvalidRequestType::ORDER_NOT_FOUND:
-					throw new \SlevomatZboziApi\Request\OrderNotFoundException($responseBody['messages']);
-
+					throw new OrderNotFoundException($responseBody['messages']);
 				case InvalidRequestType::ORDER_ITEM_NOT_FOUND:
-					throw new \SlevomatZboziApi\Request\OrderItemNotFoundException($responseBody['messages']);
-
+					throw new OrderItemNotFoundException($responseBody['messages']);
 				case InvalidRequestType::INVALID_STATUS_CHANGE:
-					throw new \SlevomatZboziApi\Request\InvalidStatusChangeException($responseBody['messages']);
-
+					throw new InvalidStatusChangeException($responseBody['messages']);
 				case InvalidRequestType::INVALID_CANCEL:
-					throw new \SlevomatZboziApi\Request\InvalidCancelException($responseBody['messages']);
-
+					throw new InvalidCancelException($responseBody['messages']);
 				case InvalidRequestType::OTHER_ERROR:
-					throw new \SlevomatZboziApi\Request\OtherRequestErrorException($responseBody['messages']);
-
+					throw new OtherRequestErrorException($responseBody['messages']);
 				case InvalidRequestType::ORDER_NOT_EXPORTED:
-					throw new \SlevomatZboziApi\Request\OrderNotExportedException($responseBody['messages']);
-
+					throw new OrderNotExportedException($responseBody['messages']);
 				default:
-					throw new \SlevomatZboziApi\Response\ResponseErrorException(sprintf('Slevomat API %s response contains unknown status %s.', $response->getStatusCode(), $responseBody['status']));
+					throw new ResponseErrorException(sprintf('Slevomat API %s response contains unknown status %s.', $response->getStatusCode(), $responseBody['status']));
 			}
 		}
 
-		throw new \SlevomatZboziApi\Response\ResponseErrorException(sprintf('Slevomat API responded with unexpected HTTP status code: %s.', $response->getStatusCode()));
+		throw new ResponseErrorException(sprintf('Slevomat API responded with unexpected HTTP status code: %s.', $response->getStatusCode()));
 	}
 
-	/**
-	 * @param \SlevomatZboziApi\Response\ZboziApiResponse $response
-	 * @return \DateTime
-	 */
-	public function getExpectedDeliveryDate(ZboziApiResponse $response)
+	public function getExpectedDeliveryDate(ZboziApiResponse $response): DateTime
 	{
 		$body = $response->getBody();
 
 		if (!isset($body['expectedDeliveryDate'])) {
-			throw new \SlevomatZboziApi\Response\ResponseErrorException('Slevomat API response doesn\'t contain expectedDeliveryDate.');
+			throw new ResponseErrorException('Slevomat API response doesn\'t contain expectedDeliveryDate.');
 		}
 
-		$date = \DateTime::createFromFormat('Y-m-d', $body['expectedDeliveryDate']);
+		$date = DateTime::createFromFormat('Y-m-d', $body['expectedDeliveryDate']);
 		if ($date === false) {
-			throw new \SlevomatZboziApi\Response\ResponseErrorException(sprintf('Slevomat API invalid response: invalid expectedDeliveryDate %s.', $body['expectedDeliveryDate']));
+			throw new ResponseErrorException(sprintf('Slevomat API invalid response: invalid expectedDeliveryDate %s.', $body['expectedDeliveryDate']));
 		}
 
 		return $date;

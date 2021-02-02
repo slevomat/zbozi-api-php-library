@@ -1,8 +1,11 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Response;
 
-class ResponseParsingErrorException extends \Exception implements \SlevomatZboziApi\ZboziApiException
+use Exception;
+use SlevomatZboziApi\ZboziApiException;
+
+class ResponseParsingErrorException extends Exception implements ZboziApiException
 {
 
 }

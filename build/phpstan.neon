@@ -1,0 +1,7 @@
+includes:
+	- ../vendor/phpstan/phpstan-strict-rules/rules.neon
+	- ../vendor/phpstan/phpstan-phpunit/extension.neon
+	- ../vendor/phpstan/phpstan-phpunit/rules.neon
+parameters:
+	ignoreErrors:
+		- '#Call to static method PHPUnit\\Framework\\Assert::assertTrue\(\) with true will always evaluate to true\.#'

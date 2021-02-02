@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi;
 
@@ -8,6 +8,6 @@ use SlevomatZboziApi\Response\ZboziApiResponse;
 interface ZboziApiLogger
 {
 
-	public function log(ZboziApiRequest $request, ZboziApiResponse $response = null);
+	public function log(ZboziApiRequest $request, ?ZboziApiResponse $response = null): void;
 
 }

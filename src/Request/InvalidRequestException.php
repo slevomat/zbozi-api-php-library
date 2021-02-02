@@ -1,12 +1,16 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
-abstract class InvalidRequestException extends \Exception implements \SlevomatZboziApi\ZboziApiException
+use Exception;
+use SlevomatZboziApi\ZboziApiException;
+use function implode;
+
+abstract class InvalidRequestException extends Exception implements ZboziApiException
 {
 
 	/** @var string[] */
-	private $messages;
+	private array $messages;
 
 	/**
 	 * @param string[] $messages
@@ -21,7 +25,7 @@ abstract class InvalidRequestException extends \Exception implements \SlevomatZb
 	/**
 	 * @return string[]
 	 */
-	public function getMessages()
+	public function getMessages(): array
 	{
 		return $this->messages;
 	}

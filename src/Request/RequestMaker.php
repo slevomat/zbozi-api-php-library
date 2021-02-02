@@ -1,46 +1,49 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use SlevomatZboziApi\Response\ResponseErrorException;
+use SlevomatZboziApi\Response\ResponseParsingErrorException;
 use SlevomatZboziApi\Response\ZboziApiResponse;
 use SlevomatZboziApi\Type\TypeValidator;
 use SlevomatZboziApi\ZboziApiLogger;
+use function GuzzleHttp\Psr7\stream_for;
+use function json_decode;
+use function json_encode;
+use function json_last_error;
+use function preg_match;
+use function sprintf;
+use const JSON_ERROR_NONE;
+use const PHP_VERSION;
 
 class RequestMaker
 {
 
-	const HEADER_PARTNER_TOKEN = 'X-PartnerToken';
-	const HEADER_API_SECRET = 'X-ApiSecret';
-	const HEADER_USER_AGENT = 'User-Agent';
+	public const HEADER_PARTNER_TOKEN = 'X-PartnerToken';
+	public const HEADER_API_SECRET = 'X-ApiSecret';
+	public const HEADER_USER_AGENT = 'User-Agent';
 
-	/** @var \GuzzleHttp\ClientInterface */
-	private $client;
+	private ClientInterface $client;
 
-	/** @var string */
-	private $partnerToken;
+	private string $partnerToken;
 
-	/** @var string */
-	private $apiSecret;
+	private string $apiSecret;
 
-	/** @var integer */
-	private $timeoutInSeconds;
+	private int $timeoutInSeconds;
 
-	/** @var \SlevomatZboziApi\ZboziApiLogger|null */
-	private $logger;
+	private ?ZboziApiLogger $logger = null;
 
-	/**
-	 * @param \GuzzleHttp\ClientInterface $client
-	 * @param string $partnerToken
-	 * @param string $apiSecret
-	 * @param integer $timeoutInSeconds
-	 * @param \SlevomatZboziApi\ZboziApiLogger $logger
-	 */
 	public function __construct(
-		\GuzzleHttp\ClientInterface $client,
-		$partnerToken,
-		$apiSecret,
-		$timeoutInSeconds,
-		ZboziApiLogger $logger = null
+		ClientInterface $client,
+		string $partnerToken,
+		string $apiSecret,
+		int $timeoutInSeconds,
+		?ZboziApiLogger $logger = null
 	)
 	{
 		TypeValidator::checkString($partnerToken);
@@ -57,21 +60,21 @@ class RequestMaker
 	/**
 	 * @param string $url
 	 * @param mixed[]|null $body
-	 * @return \SlevomatZboziApi\Response\ZboziApiResponse
+	 * @return ZboziApiResponse
 	 */
-	public function sendPostRequest($url, array $body = null)
+	public function sendPostRequest(string $url, ?array $body = null): ZboziApiResponse
 	{
 		TypeValidator::checkString($url);
 
-		$request = new \GuzzleHttp\Psr7\Request(
+		$request = new Request(
 			'POST',
 			$url,
 			[
-				static::HEADER_PARTNER_TOKEN => $this->partnerToken,
-				static::HEADER_API_SECRET => $this->apiSecret,
-				static::HEADER_USER_AGENT => sprintf('SlevomatZboziApiClient/PHP %s', PHP_VERSION),
+				self::HEADER_PARTNER_TOKEN => $this->partnerToken,
+				self::HEADER_API_SECRET => $this->apiSecret,
+				self::HEADER_USER_AGENT => sprintf('SlevomatZboziApiClient/PHP %s', PHP_VERSION),
 			],
-			$body === null ? null : \GuzzleHttp\Psr7\stream_for(json_encode($body))
+			$body === null ? null : stream_for(json_encode($body)),
 		);
 
 		$options = [
@@ -87,27 +90,24 @@ class RequestMaker
 				$this->log($request, $response);
 
 				return $this->getZboziApiResponse($response);
-
-			} catch (\GuzzleHttp\Exception\RequestException $e) {
+			} catch (RequestException $e) {
 				$response = $e->getResponse();
 				$this->log($request, $response);
 				if ($response !== null) {
 					return $this->getZboziApiResponse($response);
 				}
-				throw new \SlevomatZboziApi\Request\ConnectionErrorException('Connection to Slevomat API failed.', $e->getCode(), $e);
+
+				throw new ConnectionErrorException('Connection to Slevomat API failed.', $e->getCode(), $e);
 			}
 
-		} catch (\SlevomatZboziApi\Response\ResponseParsingErrorException $e) {
-			$this->log($request, isset($response) ? $response : null, true);
-			throw new \SlevomatZboziApi\Response\ResponseErrorException('Slevomat API invalid response: invalid JSON data.', $e->getCode(), $e);
+		} catch (ResponseParsingErrorException $e) {
+			$this->log($request, $response ?? null, true);
+
+			throw new ResponseErrorException('Slevomat API invalid response: invalid JSON data.', $e->getCode(), $e);
 		}
 	}
 
-	/**
-	 * @param \Psr\Http\Message\RequestInterface $request
-	 * @return \SlevomatZboziApi\Request\ZboziApiRequest
-	 */
-	private function getZboziApiRequest(\Psr\Http\Message\RequestInterface $request)
+	private function getZboziApiRequest(RequestInterface $request): ZboziApiRequest
 	{
 		$body = (string) $request->getBody();
 
@@ -115,40 +115,30 @@ class RequestMaker
 			$request->getMethod(),
 			(string) $request->getUri(),
 			$request->getHeaders(),
-			$body === '' ? null : json_decode($body, true)
+			$body === '' ? null : json_decode($body, true),
 		);
 	}
 
-	/**
-	 * @param \Psr\Http\Message\ResponseInterface $response
-	 * @param boolean $ignoreBody
-	 * @return \SlevomatZboziApi\Response\ZboziApiResponse
-	 */
-	private function getZboziApiResponse(\Psr\Http\Message\ResponseInterface $response, $ignoreBody = false)
+	private function getZboziApiResponse(ResponseInterface $response, bool $ignoreBody = false): ZboziApiResponse
 	{
-		if (!$ignoreBody && preg_match('~^[2|4]~', $response->getStatusCode())) {
+		if (!$ignoreBody && preg_match('~^[2|4]~', (string) $response->getStatusCode()) === 1) {
 			$bodyEncoded = (string) $response->getBody();
 			$body = $bodyEncoded === '' ? null : json_decode($bodyEncoded, true);
 			if (json_last_error() !== JSON_ERROR_NONE) {
-				throw new \SlevomatZboziApi\Response\ResponseParsingErrorException();
+				throw new ResponseParsingErrorException();
 			}
-			return new ZboziApiResponse($response->getStatusCode(), $body);
 
-		} else {
-			return new ZboziApiResponse($response->getStatusCode());
+			return new ZboziApiResponse($response->getStatusCode(), $body);
 		}
+
+		return new ZboziApiResponse($response->getStatusCode());
 	}
 
-	/**
-	 * @param \Psr\Http\Message\RequestInterface $request
-	 * @param \Psr\Http\Message\ResponseInterface|null $response
-	 * @param boolean $ignoreBody
-	 */
 	private function log(
-		\Psr\Http\Message\RequestInterface $request,
-		\Psr\Http\Message\ResponseInterface $response = null,
-		$ignoreBody = false
-	)
+		RequestInterface $request,
+		?ResponseInterface $response = null,
+		bool $ignoreBody = false
+	): void
 	{
 		if ($this->logger === null) {
 			return;
@@ -156,7 +146,7 @@ class RequestMaker
 
 		$this->logger->log(
 			$this->getZboziApiRequest($request),
-			$response === null ? null : $this->getZboziApiResponse($response, $ignoreBody)
+			$response === null ? null : $this->getZboziApiResponse($response, $ignoreBody),
 		);
 	}
 

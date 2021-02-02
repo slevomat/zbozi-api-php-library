@@ -1,8 +1,11 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
-class ConnectionErrorException extends \Exception implements \SlevomatZboziApi\ZboziApiException
+use Exception;
+use SlevomatZboziApi\ZboziApiException;
+
+class ConnectionErrorException extends Exception implements ZboziApiException
 {
 
 }

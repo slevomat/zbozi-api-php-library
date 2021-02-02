@@ -9,16 +9,19 @@
 		}
 	],
 	"require": {
-		"php": "^5.6|^7.0",
-		"guzzlehttp/guzzle": "^6.0"
+		"php": "^7.4 || ^8.0",
+		"ext-json": "*",
+		"guzzlehttp/guzzle": "^6.4.1 || ^7.0.1"
 	},
 	"require-dev": {
-		"consistence/coding-standard": "^0.8",
-		"phing/phing": "~2.11",
-		"phpunit/phpunit": "~4.8",
-		"jakub-onderka/php-parallel-lint": "~0.9",
-		"satooshi/php-coveralls": "dev-master",
-		"slevomat/coding-standard": "^1.0"
+		"phing/phing": "^2.16.3",
+		"phpstan/phpstan": "^0.12.54",
+		"phpstan/phpstan-phpunit": "^0.12.16",
+		"phpstan/phpstan-strict-rules": "^0.12.4",
+		"phpunit/phpunit": "^8.5.14 || ^9.3.7",
+		"php-parallel-lint/php-parallel-lint": "~1.2",
+		"php-coveralls/php-coveralls": "~2.4",
+		"slevomat/coding-standard": "^6.3.10"
 	},
 	"autoload": {
 		"psr-4": {

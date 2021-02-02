@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi;
 
@@ -13,11 +13,17 @@ class ZboziApiClientFactory
 	 * @param string $partnerToken
 	 * @param string $apiSecret
 	 * @param string $apiUrl
-	 * @param integer $timeoutInSeconds (0 = unlimited)
-	 * @param \SlevomatZboziApi\ZboziApiLogger $logger
-	 * @return \SlevomatZboziApi\ZboziApiClient
+	 * @param int $timeoutInSeconds (0 = unlimited)
+	 * @param ZboziApiLogger $logger
+	 * @return ZboziApiClient
 	 */
-	public static function create($partnerToken, $apiSecret, $apiUrl, $timeoutInSeconds = 30, ZboziApiLogger $logger = null)
+	public static function create(
+		string $partnerToken,
+		string $apiSecret,
+		string $apiUrl,
+		int $timeoutInSeconds = 30,
+		?ZboziApiLogger $logger = null
+	): ZboziApiClient
 	{
 		TypeValidator::checkString($partnerToken);
 		TypeValidator::checkString($apiSecret);

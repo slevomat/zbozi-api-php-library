@@ -1,8 +1,11 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Type;
 
-class TypeValidationFailedException extends \Exception implements \SlevomatZboziApi\ZboziApiException
+use Exception;
+use SlevomatZboziApi\ZboziApiException;
+
+class TypeValidationFailedException extends Exception implements ZboziApiException
 {
 
 }

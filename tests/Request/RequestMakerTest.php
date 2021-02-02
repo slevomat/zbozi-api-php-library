@@ -1,25 +1,35 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use SlevomatZboziApi\Response\ResponseErrorException;
 use SlevomatZboziApi\Response\ZboziApiResponse;
+use SlevomatZboziApi\ZboziApiLogger;
+use function json_decode;
+use function json_encode;
 
-class RequestMakerTest extends \PHPUnit_Framework_TestCase
+class RequestMakerTest extends TestCase
 {
 
-	/** @var \GuzzleHttp\Client|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Client|MockObject */
 	private $httpClientMock;
 
-	/** @var string */
-	private $partnerToken = 'sfdsfsdfwerwers';
+	private string $partnerToken = 'sfdsfsdfwerwers';
 
-	/** @var string */
-	private $apiSecret = 'qwrwerwerwerwewer';
+	private string $apiSecret = 'qwrwerwerwerwewer';
 
-	/** @var \SlevomatZboziApi\ZboziApiLogger|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ZboziApiLogger|MockObject */
 	private $loggerMock;
 
-	public function setup()
+	protected function setUp(): void
 	{
 		$this->httpClientMock = $this->getMockBuilder('GuzzleHttp\Client')
 			->disableOriginalConstructor()
@@ -30,7 +40,7 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 			->getMock();
 	}
 
-	public function testSendPostRequestReturnsZboziApiResponse()
+	public function testSendPostRequestReturnsZboziApiResponse(): void
 	{
 		$requestUrl = 'someUrl';
 		$requestBody = [
@@ -39,13 +49,18 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 		$responseBody = [
 			'expectedDeliveryDate' => '2012-01-01',
 		];
-		$response = new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody));
+		$encodedBody = json_encode($responseBody);
+		if ($encodedBody === false) {
+			throw new Exception('JSON encode failed');
+		}
+		$response = new Response(200, [], $encodedBody);
 
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->with($this->callback(function (\GuzzleHttp\Psr7\Request $request) use ($requestBody) {
+			->with(Assert::callback(static function (Request $request) use ($requestBody): bool {
 				$body = json_decode((string) $request->getBody(), true);
+
 				return $request->getMethod() === 'POST' && $request->getUri()->getPath() === 'someUrl' && $body === $requestBody;
 			}))
 			->willReturn($response);
@@ -54,39 +69,33 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 			->expects(self::once())
 			->method('log')
 			->with(
-				$this->callback(function (ZboziApiRequest $request) use ($requestBody) {
-					return $request->getMethod() === 'POST' && $request->getUrl() === 'someUrl' && $request->getBody() === $requestBody;
-				}),
-				$this->callback(function (ZboziApiResponse $response) use ($responseBody) {
-					return $response->getStatusCode() === 200 && $response->getBody() === $responseBody;
-				})
+				Assert::callback(static fn (ZboziApiRequest $request) => $request->getMethod() === 'POST' && $request->getUrl() === 'someUrl' && $request->getBody() === $requestBody),
+				Assert::callback(static fn (ZboziApiResponse $response) => $response->getStatusCode() === 200 && $response->getBody() === $responseBody),
 			);
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest($requestUrl, $requestBody);
-		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
-		$this->assertSame(200, $response->getStatusCode());
-		$this->assertSame($responseBody, $response->getBody());
+		Assert::assertSame(200, $response->getStatusCode());
+		Assert::assertSame($responseBody, $response->getBody());
 	}
 
-	public function testSendPostRequestReturnsZboziApiResponseAndIgnoresResponseBodyForResponsesWithStatusCodeStartingAt5()
+	public function testSendPostRequestReturnsZboziApiResponseAndIgnoresResponseBodyForResponsesWithStatusCodeStartingAt5(): void
 	{
 		$this->loggerMock->expects(self::once())->method('log');
 
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->willReturn(new \GuzzleHttp\Psr7\Response(500, [], '<html>Server error</html>'));
+			->willReturn(new Response(500, [], '<html>Server error</html>'));
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest('somerUrl');
 
-		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
-		$this->assertSame(500, $response->getStatusCode());
-		$this->assertSame(null, $response->getBody());
+		Assert::assertSame(500, $response->getStatusCode());
+		Assert::assertNull($response->getBody());
 	}
 
-	public function testZboziApiResponseIsReturnedForResponsesWithStatusCodeStartingAt4()
+	public function testZboziApiResponseIsReturnedForResponsesWithStatusCodeStartingAt4(): void
 	{
 		$this->loggerMock->expects(self::once())->method('log');
 
@@ -94,90 +103,79 @@ class RequestMakerTest extends \PHPUnit_Framework_TestCase
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->willReturn(new \GuzzleHttp\Psr7\Response(404, [], $responseBody));
+			->willReturn(new Response(404, [], $responseBody));
 
 		$requestMaker = $this->createRequestMaker();
 		$response = $requestMaker->sendPostRequest('somerUrl');
 
-		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
-		$this->assertSame(404, $response->getStatusCode());
-		$this->assertSame($responseBody, json_encode($response->getBody()));
+		Assert::assertSame(404, $response->getStatusCode());
+		Assert::assertSame($responseBody, json_encode($response->getBody()));
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\ConnectionErrorException
-	 * @expectedExceptionMessage Connection to Slevomat API failed.
-	 */
-	public function testConnectionErrorExceptionIsThrownWhenRequestExceptionDoesntContainResponse()
+	public function testConnectionErrorExceptionIsThrownWhenRequestExceptionDoesntContainResponse(): void
 	{
+		$this->expectException(ConnectionErrorException::class);
+		$this->expectExceptionMessage('Connection to Slevomat API failed.');
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$request = new \GuzzleHttp\Psr7\Request('POST', 'someUrl');
+		$request = new Request('POST', 'someUrl');
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->willThrowException(new \GuzzleHttp\Exception\RequestException('some message', $request));
+			->willThrowException(new RequestException('some message', $request));
 
 		$requestMaker = $this->createRequestMaker();
 		$requestMaker->sendPostRequest('somerUrl');
 	}
 
-	public function testZboziApiResponseIsReturnedWhenRequestExceptionContainsResponse()
+	public function testZboziApiResponseIsReturnedWhenRequestExceptionContainsResponse(): void
 	{
-		$response = new \GuzzleHttp\Psr7\Response(300);
+		$response = new Response(300);
 		$this->loggerMock->expects(self::once())->method('log');
 
-		$request = new \GuzzleHttp\Psr7\Request('POST', 'someUrl');
+		$request = new Request('POST', 'someUrl');
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->willThrowException(new \GuzzleHttp\Exception\RequestException('some message', $request, $response));
-
-		$requestMaker = $this->createRequestMaker();
-		$response = $requestMaker->sendPostRequest('someUrl');
-		$this->assertInstanceOf('SlevomatZboziApi\Response\ZboziApiResponse', $response);
-	}
-
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API invalid response: invalid JSON data.
-	 */
-	public function testResponseErrorExceptionIsThrownForResponseWithInvalidJsonData()
-	{
-		$this->loggerMock->expects(self::once())->method('log');
-
-		$this->httpClientMock
-			->expects(self::once())
-			->method('send')
-			->willReturn(new \GuzzleHttp\Psr7\Response(200, [], '{"someData":xxx}'));
+			->willThrowException(new RequestException('some message', $request, $response));
 
 		$requestMaker = $this->createRequestMaker();
 		$requestMaker->sendPostRequest('someUrl');
 	}
 
-	public function testSendPostRequestWorksWithoutLogger()
+	public function testResponseErrorExceptionIsThrownForResponseWithInvalidJsonData(): void
 	{
-		$this->loggerMock = null;
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API invalid response: invalid JSON data.');
+		$this->loggerMock->expects(self::once())->method('log');
 
 		$this->httpClientMock
 			->expects(self::once())
 			->method('send')
-			->with($this->callback(function (\GuzzleHttp\Psr7\Request $subject) {
-				return $subject->getMethod() === 'POST' && $subject->getUri()->getPath() === 'someUrl';
-			}))
-			->willReturn(new \GuzzleHttp\Psr7\Response(200, [], '{"someData":8}'));
+			->willReturn(new Response(200, [], '{"someData":xxx}'));
 
 		$requestMaker = $this->createRequestMaker();
 		$requestMaker->sendPostRequest('someUrl');
-		$this->assertTrue(true);
 	}
 
-	/**
-	 * @return \SlevomatZboziApi\Request\RequestMaker
-	 */
-	private function createRequestMaker()
+	public function testSendPostRequestWorksWithoutLogger(): void
 	{
-		return new RequestMaker($this->httpClientMock, $this->partnerToken, $this->apiSecret, 30, $this->loggerMock);
+		$this->httpClientMock
+			->expects(self::once())
+			->method('send')
+			->with(Assert::callback(static fn (Request $subject) => $subject->getMethod() === 'POST' && $subject->getUri()->getPath() === 'someUrl'))
+			->willReturn(new Response(200, [], '{"someData":8}'));
+
+		$requestMaker = $this->createRequestMaker(true);
+		$requestMaker->sendPostRequest('someUrl');
+		Assert::assertTrue(true);
+	}
+
+	private function createRequestMaker(bool $excludeLogger = false): RequestMaker
+	{
+		$logger = $excludeLogger ? null : $this->loggerMock;
+
+		return new RequestMaker($this->httpClientMock, $this->partnerToken, $this->apiSecret, 30, $logger);
 	}
 
 }
