@@ -186,4 +186,4 @@ jobs:
       - name: "Upload to Codecov.io"
         env:
           CODECOV_TOKEN: "${{ secrets.CODECOV }}"
-        run: "bash <(curl -s https://codecov.io/bash) -f build/log/clover.xml"
+        run: "bash <(curl -s https://codecov.io/bash) -f temp/clover.xml"
