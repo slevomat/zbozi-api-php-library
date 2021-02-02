@@ -82,4 +82,21 @@
 		</exec>
 	</target>
 
+	<target name="phpstan">
+		<exec
+				executable="${path.phpstan.executable}"
+				logoutput="true"
+				passthru="true"
+				checkreturn="true"
+		>
+			<arg value="analyse"/>
+			<arg value="-l"/>
+			<arg value="8"/>
+			<arg value="-c"/>
+			<arg value="${path.phpstan.configuration}"/>
+			<arg path="${path.src}"/>
+			<arg path="${path.tests}"/>
+		</exec>
+	</target>
+
 </project>

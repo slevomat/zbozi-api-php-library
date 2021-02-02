@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Response;
 
@@ -7,17 +7,16 @@ use SlevomatZboziApi\Type\TypeValidator;
 class ZboziApiResponse
 {
 
-	/** @var array|null */
-	private $body;
+	/** @var mixed[]|null */
+	private ?array $body = null;
 
-	/** @var integer */
-	private $statusCode;
+	private int $statusCode;
 
 	/**
-	 * @param integer $statusCode
-	 * @param array|null $body
+	 * @param int $statusCode
+	 * @param mixed[]|null $body
 	 */
-	public function __construct($statusCode, array $body = null)
+	public function __construct(int $statusCode, ?array $body = null)
 	{
 		TypeValidator::checkInteger($statusCode);
 
@@ -26,17 +25,14 @@ class ZboziApiResponse
 	}
 
 	/**
-	 * @return array|null
+	 * @return mixed[]|null
 	 */
-	public function getBody()
+	public function getBody(): ?array
 	{
 		return $this->body;
 	}
 
-	/**
-	 * @return integer
-	 */
-	public function getStatusCode()
+	public function getStatusCode(): int
 	{
 		return $this->statusCode;
 	}

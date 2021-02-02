@@ -1,14 +1,19 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Type;
 
-class TypeValidatorTest extends \PHPUnit_Framework_TestCase
+use Exception;
+use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\TestCase;
+use StdClass;
+
+class TypeValidatorTest extends TestCase
 {
 
 	/**
 	 * @return mixed[][]
 	 */
-	public function invalidStrings()
+	public function invalidStrings(): array
 	{
 		return [
 			[true],
@@ -22,7 +27,7 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function validStrings()
+	public function validStrings(): array
 	{
 		return [
 			['sfdsfsdfsd'],
@@ -35,7 +40,7 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function invalidIntegers()
+	public function invalidIntegers(): array
 	{
 		return [
 			['1212'],
@@ -43,14 +48,14 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 			[0.5],
 			[null],
 			[[]],
-			[new \StdClass()],
+			[new StdClass()],
 		];
 	}
 
 	/**
 	 * @return mixed[][]
 	 */
-	public function validIntegers()
+	public function validIntegers(): array
 	{
 		return [
 			[12122],
@@ -62,7 +67,7 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function validBooleans()
+	public function validBooleans(): array
 	{
 		return [
 			[true],
@@ -74,7 +79,7 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function invalidBooleans()
+	public function invalidBooleans(): array
 	{
 		return [
 			[1],
@@ -83,14 +88,14 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 			[0.5],
 			[null],
 			[[]],
-			[new \StdClass()],
+			[new StdClass()],
 		];
 	}
 
 	/**
 	 * @return mixed[][]
 	 */
-	public function invalidArrays()
+	public function invalidArrays(): array
 	{
 		return [
 			[1212],
@@ -98,19 +103,19 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 			[true],
 			[0.5],
 			[null],
-			[[new \StdClass(), new \Exception('x')], 'StdClass'],
-			[[new \StdClass(), 121212], 'StdClass'],
+			[[new StdClass(), new Exception('x')], 'StdClass'],
+			[[new StdClass(), 121212], 'StdClass'],
 		];
 	}
 
 	/**
 	 * @return mixed[][]
 	 */
-	public function validArrays()
+	public function validArrays(): array
 	{
 		return [
-			[[new \StdClass(), new \Exception('x')]],
-			[[new \StdClass(), new \StdClass()], 'StdClass'],
+			[[new StdClass(), new Exception('x')]],
+			[[new StdClass(), new StdClass()], 'StdClass'],
 			[[]],
 			[[], 'StdClass'],
 			[null, null, true],
@@ -119,91 +124,99 @@ class TypeValidatorTest extends \PHPUnit_Framework_TestCase
 
 	/**
 	 * @dataProvider validStrings
+	 *
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public function testCheckString($value, $allowNull = false)
+	public function testCheckString($value, bool $allowNull = false): void
 	{
 		TypeValidator::checkString($value, $allowNull);
-		$this->assertTrue(true);
+		Assert::assertTrue(true);
 	}
 
 	/**
 	 * @dataProvider invalidStrings
+	 *
 	 * @param mixed $value
-	 * @expectedException \SlevomatZboziApi\Type\TypeValidationFailedException
-	 * @expectedExceptionMessage String expected
 	 */
-	public function testCheckStringThrowsExceptionForInvalidStrings($value)
+	public function testCheckStringThrowsExceptionForInvalidStrings($value): void
 	{
+		$this->expectException(TypeValidationFailedException::class);
+		$this->expectExceptionMessage('String expected');
 		TypeValidator::checkString($value, false);
 	}
 
 	/**
 	 * @dataProvider validIntegers
+	 *
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public function testCheckInteger($value, $allowNull = false)
+	public function testCheckInteger($value, bool $allowNull = false): void
 	{
 		TypeValidator::checkInteger($value, $allowNull);
-		$this->assertTrue(true);
+		Assert::assertTrue(true);
 	}
 
 	/**
 	 * @dataProvider invalidIntegers
+	 *
 	 * @param mixed $value
-	 * @expectedException \SlevomatZboziApi\Type\TypeValidationFailedException
-	 * @expectedExceptionMessage Integer expected
 	 */
-	public function testCheckIntegerThrowsExceptionForInvalidIntegers($value)
+	public function testCheckIntegerThrowsExceptionForInvalidIntegers($value): void
 	{
+		$this->expectException(TypeValidationFailedException::class);
+		$this->expectExceptionMessage('Integer expected');
 		TypeValidator::checkInteger($value, false);
 	}
 
 	/**
 	 * @dataProvider validBooleans
+	 *
 	 * @param mixed $value
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public function testCheckBoolean($value, $allowNull = false)
+	public function testCheckBoolean($value, bool $allowNull = false): void
 	{
 		TypeValidator::checkBoolean($value, $allowNull);
-		$this->assertTrue(true);
+		Assert::assertTrue(true);
 	}
 
 	/**
 	 * @dataProvider invalidBooleans
+	 *
 	 * @param mixed $value
-	 * @expectedException \SlevomatZboziApi\Type\TypeValidationFailedException
-	 * @expectedExceptionMessage Boolean expected
 	 */
-	public function testCheckBooleanThrowsExceptionForInvalidBooleans($value)
+	public function testCheckBooleanThrowsExceptionForInvalidBooleans($value): void
 	{
+		$this->expectException(TypeValidationFailedException::class);
+		$this->expectExceptionMessage('Boolean expected');
 		TypeValidator::checkBoolean($value, false);
 	}
 
 	/**
 	 * @dataProvider validArrays
+	 *
 	 * @param mixed $value
 	 * @param string|null $className
-	 * @param boolean $allowNull
+	 * @param bool $allowNull
 	 */
-	public function testCheckArray($value, $className = null, $allowNull = false)
+	public function testCheckArray($value, ?string $className = null, bool $allowNull = false): void
 	{
 		TypeValidator::checkArray($value, $className, $allowNull);
-		$this->assertTrue(true);
+		Assert::assertTrue(true);
 	}
 
 	/**
 	 * @dataProvider invalidArrays
+	 *
 	 * @param mixed $value
 	 * @param string|null $className
-	 * @param boolean $allowNull
-	 * @expectedException \SlevomatZboziApi\Type\TypeValidationFailedException
+	 * @param bool $allowNull
 	 */
-	public function testCheckArrayThrowsExceptionForInvalidArrays($value, $className = null, $allowNull = false)
+	public function testCheckArrayThrowsExceptionForInvalidArrays($value, ?string $className = null, bool $allowNull = false): void
 	{
+		$this->expectException(TypeValidationFailedException::class);
 		TypeValidator::checkArray($value, $className, $allowNull);
 	}
 

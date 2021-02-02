@@ -1,31 +1,30 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
 use SlevomatZboziApi\Type\TypeValidator;
+use function is_array;
 
 class ZboziApiRequest
 {
 
-	/** @var string */
-	private $method;
+	private string $method;
 
-	/** @var string */
-	private $url;
+	private string $url;
 
 	/** @var mixed[] */
-	private $headers;
+	private array $headers;
 
 	/** @var mixed[]|null */
-	private $body;
+	private ?array $body = null;
 
 	/**
 	 * @param string $method
 	 * @param string $url
-	 * @param array $headers
-	 * @param array|null $body
+	 * @param mixed[] $headers
+	 * @param mixed[]|null $body
 	 */
-	public function __construct($method, $url, array $headers, $body = null)
+	public function __construct(string $method, string $url, array $headers, ?array $body = null)
 	{
 		TypeValidator::checkString($method);
 		TypeValidator::checkString($url);
@@ -36,26 +35,20 @@ class ZboziApiRequest
 		$this->body = $body;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getMethod()
+	public function getMethod(): string
 	{
 		return $this->method;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getUrl()
+	public function getUrl(): string
 	{
 		return $this->url;
 	}
 
 	/**
-	 * @return \mixed[]
+	 * @return mixed[]
 	 */
-	public function getHeaders()
+	public function getHeaders(): array
 	{
 		return $this->headers;
 	}
@@ -64,7 +57,7 @@ class ZboziApiRequest
 	 * @param string $headerName
 	 * @return mixed|null
 	 */
-	public function getHeader($headerName)
+	public function getHeader(string $headerName)
 	{
 		TypeValidator::checkString($headerName);
 
@@ -76,9 +69,9 @@ class ZboziApiRequest
 	}
 
 	/**
-	 * @return \mixed[]|null
+	 * @return mixed[]|null
 	 */
-	public function getBody()
+	public function getBody(): ?array
 	{
 		return $this->body;
 	}

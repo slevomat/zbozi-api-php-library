@@ -1,40 +1,29 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Request;
 
+use JsonSerializable;
 use SlevomatZboziApi\Type\TypeValidator;
 
-class CancelOrderItem implements \JsonSerializable
+class CancelOrderItem implements JsonSerializable
 {
 
-	/** @var string */
-	private $slevomatId;
+	private string $slevomatId;
 
-	/** @var integer */
-	private $amount;
+	private int $amount;
 
-	/**
-	 * @param string $slevomatId
-	 * @param integer $amount
-	 */
-	public function __construct($slevomatId, $amount)
+	public function __construct(string $slevomatId, int $amount)
 	{
 		$this->setSlevomatId($slevomatId);
 		$this->setAmount($amount);
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getSlevomatId()
+	public function getSlevomatId(): string
 	{
 		return $this->slevomatId;
 	}
 
-	/**
-	 * @return integer
-	 */
-	public function getAmount()
+	public function getAmount(): int
 	{
 		return $this->amount;
 	}
@@ -42,7 +31,7 @@ class CancelOrderItem implements \JsonSerializable
 	/**
 	 * @return mixed[]
 	 */
-	public function jsonSerialize()
+	public function jsonSerialize(): array
 	{
 		return [
 			'slevomatId' => $this->getSlevomatId(),
@@ -50,20 +39,14 @@ class CancelOrderItem implements \JsonSerializable
 		];
 	}
 
-	/**
-	 * @param string $slevomatId
-	 */
-	private function setSlevomatId($slevomatId)
+	private function setSlevomatId(string $slevomatId): void
 	{
 		TypeValidator::checkString($slevomatId);
 
 		$this->slevomatId = $slevomatId;
 	}
 
-	/**
-	 * @param integer $amount
-	 */
-	private function setAmount($amount)
+	private function setAmount(int $amount): void
 	{
 		TypeValidator::checkInteger($amount);
 

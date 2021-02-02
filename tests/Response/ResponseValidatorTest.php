@@ -1,26 +1,32 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi\Response;
 
+use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\TestCase;
+use SlevomatZboziApi\Request\BadRequestException;
+use SlevomatZboziApi\Request\InvalidCancelException;
+use SlevomatZboziApi\Request\InvalidCredentialsException;
 use SlevomatZboziApi\Request\InvalidRequestType;
+use SlevomatZboziApi\Request\InvalidStatusChangeException;
+use SlevomatZboziApi\Request\OrderItemNotFoundException;
+use SlevomatZboziApi\Request\OrderNotFoundException;
+use SlevomatZboziApi\Request\OtherRequestErrorException;
 
-class ResponseValidatorTest extends \PHPUnit_Framework_TestCase
+class ResponseValidatorTest extends TestCase
 {
 
-	/** @var \SlevomatZboziApi\Response\ResponseValidator */
-	private $responseValidator;
+	private ResponseValidator $responseValidator;
 
-	public function setup()
+	protected function setUp(): void
 	{
 		$this->responseValidator = new ResponseValidator();
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\BadRequestException
-	 * @expectedExceptionMessage Row 1, missing amount key. | Row 1, missing slevomatId key.
-	 */
-	public function testValidateResponseThrowsBadRequestException()
+	public function testValidateResponseThrowsBadRequestException(): void
 	{
+		$this->expectException(BadRequestException::class);
+		$this->expectExceptionMessage('Row 1, missing amount key. | Row 1, missing slevomatId key.');
 		$response = $this->createClientErrorResponse(400, InvalidRequestType::BAD_REQUEST, [
 			'Row 1, missing amount key.',
 			'Row 1, missing slevomatId key.',
@@ -28,163 +34,138 @@ class ResponseValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\InvalidCredentialsException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsInvalidCredentialsException()
+	public function testValidateResponseThrowsInvalidCredentialsException(): void
 	{
+		$this->expectException(InvalidCredentialsException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(403, InvalidRequestType::INVALID_CREDENTIALS);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\OrderNotFoundException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsOrderNotFoundException()
+	public function testValidateResponseThrowsOrderNotFoundException(): void
 	{
+		$this->expectException(OrderNotFoundException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(404, InvalidRequestType::ORDER_NOT_FOUND);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\OrderItemNotFoundException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsOrderItemNotFoundException()
+	public function testValidateResponseThrowsOrderItemNotFoundException(): void
 	{
+		$this->expectException(OrderItemNotFoundException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(404, InvalidRequestType::ORDER_ITEM_NOT_FOUND);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\InvalidStatusChangeException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsInvalidStatusChangeException()
+	public function testValidateResponseThrowsInvalidStatusChangeException(): void
 	{
+		$this->expectException(InvalidStatusChangeException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(422, InvalidRequestType::INVALID_STATUS_CHANGE);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\InvalidCancelException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsInvalidCancelException()
+	public function testValidateResponseThrowsInvalidCancelException(): void
 	{
+		$this->expectException(InvalidCancelException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(422, InvalidRequestType::INVALID_CANCEL);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Request\OtherRequestErrorException
-	 * @expectedExceptionMessage some error
-	 */
-	public function testValidateResponseThrowsOtherErrorException()
+	public function testValidateResponseThrowsOtherErrorException(): void
 	{
+		$this->expectException(OtherRequestErrorException::class);
+		$this->expectExceptionMessage('some error');
 		$response = $this->createClientErrorResponse(422, InvalidRequestType::OTHER_ERROR);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API 422 response contains unknown status 700000.
-	 */
-	public function testValidateResponseThrowsResponseErrorExceptionForUnexpectedClientErrorStatusCode()
+	public function testValidateResponseThrowsResponseErrorExceptionForUnexpectedClientErrorStatusCode(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API 422 response contains unknown status 700000.');
 		$response = $this->createClientErrorResponse(422, 700000);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API responded with unexpected HTTP status code: 300.
-	 */
-	public function testValidateResponseThrowsResponseErrorExceptionForUnexpectedHttpStatus()
+	public function testValidateResponseThrowsResponseErrorExceptionForUnexpectedHttpStatus(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API responded with unexpected HTTP status code: 300.');
 		$response = new ZboziApiResponse(300);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	public function testGetExpectedDeliveryDateReturnsDateTime()
+	public function testGetExpectedDeliveryDateReturnsDateTime(): void
 	{
 		$response = new ZboziApiResponse(200, [
 			'expectedDeliveryDate' => '2012-01-01',
 		]);
 		$date = $this->responseValidator->getExpectedDeliveryDate($response);
-		$this->assertInstanceOf('DateTime', $date);
-		$this->assertSame('2012-01-01', $date->format('Y-m-d'));
+		Assert::assertSame('2012-01-01', $date->format('Y-m-d'));
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API response doesn't contain expectedDeliveryDate.
-	 */
-	public function testGetExpectedDeliveryDateThrowsResponseExceptionForResponsesWithMissingExpectedDeliveryDateKey()
+	public function testGetExpectedDeliveryDateThrowsResponseExceptionForResponsesWithMissingExpectedDeliveryDateKey(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API response doesn\'t contain expectedDeliveryDate.');
 		$response = new ZboziApiResponse(200, []);
 		$this->responseValidator->getExpectedDeliveryDate($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API invalid response: invalid expectedDeliveryDate nonsense.
-	 */
-	public function testGetExpectedDeliveryDateThrowsResponseExceptionForResponsesWithInvalidExpectedDeliveryDateKey()
+	public function testGetExpectedDeliveryDateThrowsResponseExceptionForResponsesWithInvalidExpectedDeliveryDateKey(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API invalid response: invalid expectedDeliveryDate nonsense.');
 		$response = new ZboziApiResponse(200, [
 			'expectedDeliveryDate' => 'nonsense',
 		]);
 		$this->responseValidator->getExpectedDeliveryDate($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API invalid 400 response: missing status.
-	 */
-	public function testValidateResponseThrowsResponseErrorExceptionsWhenStatusKeyIsMissing()
+	public function testValidateResponseThrowsResponseErrorExceptionsWhenStatusKeyIsMissing(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API invalid 400 response: missing status.');
 		$response = new ZboziApiResponse(400, [
 			'messages' => ['someError'],
 		]);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @expectedException \SlevomatZboziApi\Response\ResponseErrorException
-	 * @expectedExceptionMessage Slevomat API invalid 400 response: missing messages.
-	 */
-	public function testValidateResponseThrowsResponseErrorExceptionsWhenMessagesKeyIsMissing()
+	public function testValidateResponseThrowsResponseErrorExceptionsWhenMessagesKeyIsMissing(): void
 	{
+		$this->expectException(ResponseErrorException::class);
+		$this->expectExceptionMessage('Slevomat API invalid 400 response: missing messages.');
 		$response = new ZboziApiResponse(400, [
 			'status' => InvalidRequestType::BAD_REQUEST,
 		]);
 		$this->responseValidator->validateResponse($response);
 	}
 
-	public function testValidateResponseConsidersAny200ResponseAsValid()
+	public function testValidateResponseConsidersAny200ResponseAsValid(): void
 	{
 		$this->responseValidator->validateResponse(new ZboziApiResponse(200));
 		$this->responseValidator->validateResponse(new ZboziApiResponse(204));
-		$this->assertTrue(true);
+		Assert::assertTrue(true);
 	}
 
 	/**
-	 * @param integer $httpStatusCode
-	 * @param integer $clientErrorStatus
+	 * @param int $httpStatusCode
+	 * @param int $clientErrorStatus
 	 * @param string[] $messages
-	 * @return \SlevomatZboziApi\Response\ZboziApiResponse
+	 * @return ZboziApiResponse
 	 */
-	private function createClientErrorResponse($httpStatusCode, $clientErrorStatus, $messages = ['some error'])
+	private function createClientErrorResponse(int $httpStatusCode, int $clientErrorStatus, array $messages = ['some error']): ZboziApiResponse
 	{
 		return new ZboziApiResponse(
 			$httpStatusCode,
 			[
 				'status' => $clientErrorStatus,
 				'messages' => $messages,
-			]
+			],
 		);
 	}
 

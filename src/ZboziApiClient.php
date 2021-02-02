@@ -1,29 +1,24 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace SlevomatZboziApi;
 
+use DateTime;
+use SlevomatZboziApi\Request\CancelOrderItem;
 use SlevomatZboziApi\Request\RequestMaker;
 use SlevomatZboziApi\Response\ResponseValidator;
 use SlevomatZboziApi\Type\TypeValidator;
+use function sprintf;
 
 class ZboziApiClient
 {
 
-	/** @var ResponseValidator */
-	private $responseValidator;
+	private ResponseValidator $responseValidator;
 
-	/** @var RequestMaker */
-	private $requestMaker;
+	private RequestMaker $requestMaker;
 
-	/** @var string */
-	private $apiUrl;
+	private string $apiUrl;
 
-	/**
-	 * @param RequestMaker $requestMaker
-	 * @param ResponseValidator $responseValidator
-	 * @param string $apiUrl
-	 */
-	public function __construct(RequestMaker $requestMaker, ResponseValidator $responseValidator, $apiUrl)
+	public function __construct(RequestMaker $requestMaker, ResponseValidator $responseValidator, string $apiUrl)
 	{
 		TypeValidator::checkString($apiUrl);
 
@@ -34,10 +29,10 @@ class ZboziApiClient
 
 	/**
 	 * @param string $orderId
-	 * @param \SlevomatZboziApi\Request\CancelOrderItem[] $cancelOrderItems
-	 * @param null|string $note
+	 * @param CancelOrderItem[] $cancelOrderItems
+	 * @param string|null $note
 	 */
-	public function cancelOrder($orderId, array $cancelOrderItems, $note = null)
+	public function cancelOrder(string $orderId, array $cancelOrderItems, ?string $note = null): void
 	{
 		TypeValidator::checkString($orderId);
 		TypeValidator::checkArray($cancelOrderItems, 'SlevomatZboziApi\Request\CancelOrderItem');
@@ -52,10 +47,7 @@ class ZboziApiClient
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 */
-	public function markPending($orderId)
+	public function markPending(string $orderId): void
 	{
 		TypeValidator::checkString($orderId);
 
@@ -64,12 +56,7 @@ class ZboziApiClient
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 * @param boolean $autoMarkDelivered
-	 * @return \DateTime
-	 */
-	public function markEnRoute($orderId, $autoMarkDelivered)
+	public function markEnRoute(string $orderId, bool $autoMarkDelivered): DateTime
 	{
 		TypeValidator::checkString($orderId);
 		TypeValidator::checkBoolean($autoMarkDelivered);
@@ -84,13 +71,7 @@ class ZboziApiClient
 		return $this->responseValidator->getExpectedDeliveryDate($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 * @param boolean $autoMarkReadyForPickup
-	 * @param boolean $autoMarkDelivered
-	 * @return \DateTime
-	 */
-	public function markGettingReadyForPickup($orderId, $autoMarkReadyForPickup = false, $autoMarkDelivered = false)
+	public function markGettingReadyForPickup(string $orderId, bool $autoMarkReadyForPickup = false, bool $autoMarkDelivered = false): DateTime
 	{
 		TypeValidator::checkString($orderId);
 		TypeValidator::checkBoolean($autoMarkReadyForPickup);
@@ -107,11 +88,7 @@ class ZboziApiClient
 		return $this->responseValidator->getExpectedDeliveryDate($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 * @param boolean $autoMarkDelivered
-	 */
-	public function markReadyForPickup($orderId, $autoMarkDelivered = false)
+	public function markReadyForPickup(string $orderId, bool $autoMarkDelivered = false): void
 	{
 		TypeValidator::checkString($orderId);
 		TypeValidator::checkBoolean($autoMarkDelivered);
@@ -124,10 +101,7 @@ class ZboziApiClient
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 */
-	public function markDelivered($orderId)
+	public function markDelivered(string $orderId): void
 	{
 		TypeValidator::checkString($orderId);
 
@@ -136,17 +110,16 @@ class ZboziApiClient
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 * @param string $name
-	 * @param string $street
-	 * @param string $city
-	 * @param string  $state
-	 * @param string $phone
-	 * @param string $postalCode
-	 * @param string|null $company
-	 */
-	public function updateShippingAddress($orderId, $name, $street, $city, $state, $phone, $postalCode, $company = null)
+	public function updateShippingAddress(
+		string $orderId,
+		string $name,
+		string $street,
+		string $city,
+		string $state,
+		string $phone,
+		string $postalCode,
+		?string $company = null
+	): void
 	{
 		TypeValidator::checkString($orderId);
 		TypeValidator::checkString($name);
@@ -174,12 +147,7 @@ class ZboziApiClient
 		$this->responseValidator->validateResponse($response);
 	}
 
-	/**
-	 * @param string $orderId
-	 * @param string $action
-	 * @return string
-	 */
-	private function getEndpoint($orderId, $action)
+	private function getEndpoint(string $orderId, string $action): string
 	{
 		return sprintf('%s/order/%s/%s', $this->apiUrl, $orderId, $action);
 	}
